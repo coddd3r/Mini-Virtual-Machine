@@ -27,7 +27,6 @@ typedef unsigned long int u64;
 65kb memory
 */
 typedef unsigned short int Reg;
-
 typedef struct s_registers
 {
     Reg ax;
@@ -65,14 +64,15 @@ typedef struct s_instruction
     Args a[];
 } Instruction;
 
-typedef u8 Memory[((unsigned int)(-1))];
+typedef u8 Memory[((u16)(-1))];
 typedef u8 Program;
 
 typedef struct s_virtualmachine
 {
     CPU c;
     Memory m;
-    Program p;
+    u16 b;
+    // Program p;
 } VM;
 
 typedef Memory *Stack;
