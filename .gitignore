@@ -1,0 +1,7 @@
+runner
+test.c
+test*
+*.o
+*.d
+*.out
+example*
