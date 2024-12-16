@@ -1,8 +1,11 @@
 #include "mini_vm.h"
 #include <stdio.h>
 
+#include "error_handling.h"
 #include "execute_funcs.h"
+#include "execute_mov.h"
 #include "helpers.h"
+
 // int main(int argc, char *argv[])
 int main()
 {
@@ -54,27 +57,24 @@ Program *example_program(VM *vm)
     Instruction *instr3 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     assert(instr1 && instr2 && instr3);
     printf("instr1 size is:%d\n", (int)sizeof(*instr1));
-    instr1->o = mov;
+    instr1->o = 0x0a; // mov to cx
     printf("in example program setting first instr opcode:%d\n", instr1->o);
     u16 arg_size = (instr_size1 - 1); // instructions is 1 byte
-    // u16 hex_size = (map(mov) + map(nop));
 
     // arguments
-    // 0000 0001 mov eax
+    // 0000 1010 mov cx
     // 0000 0000
-    // 0000 0005 mov eax, 0x05
-    arg1 = 0x0005; // change Arg type size to u16
+    // 0000 abcd mov cx, 0xabcd
+    arg1 = 0xabcd; // change Arg type size to u16
 
     // set the program pointer to the beginning of the stack memory
     Program *prog = vm->m;
     copy((u8 *)prog, (u8 *)instr1, 1);
     prog++; // move pointer forward by 1
 
-    if (arg1)
-    {
-        copy((u8 *)prog, (u8 *)&arg1, arg_size);
-        prog += arg_size; // move pointer to the nex point in the stack
-    }
+    // copy((u8 *)prog, (u8 *)&arg1, 1); //causes error since arg is 16bit
+    copy((u8 *)prog, (u8 *)&arg1, arg_size);
+    prog += arg_size; // move pointer to the nex point in the stack
 
     instr2->o = nop;
     copy((u8 *)prog, (u8 *)instr2, 1);
@@ -84,7 +84,8 @@ Program *example_program(VM *vm)
     copy((u8 *)prog, (u8 *)instr3, 1);
 
     // assign to the instruction pointer register, the first instruction i.e beginning of the stact mem
-    vm->c.r.ip = (Reg)(vm->m);
+    vm->c.r.ip = *(Reg *)(vm->m);
+    // point stack pointer to the end of the memory since stack builds upward from end
     vm->c.r.sp = (Reg)-1;
 
     // set break point at the end of instructions to separate instruction mem from stack
@@ -130,13 +131,18 @@ void exec_instr(VM *vm, Instruction *instr)
     case 0:
         break;
     case 1:
-        a1 = instr->a[0];
+        //        a1 = instr->a[0];
         break;
     case 2:
         a1 = instr->a[0];
-        a2 = instr->a[1];
-        printf("in case argsize==2, arg1:%d, arg2:%d\n", instr->a[0], instr->a[1]);
+        printf("in case argsize==2, arg1:%d\n", instr->a[0]);
         break;
+    case 4:
+        a1 = instr->a[0];
+        a2 = instr->a[1];
+        printf("in case argsize==5, arg1:%d, arg2:%d,\n", instr->a[0], instr->a[1]);
+        break;
+
     default:
         printf("could not find instruction of size %d, returning segfault\n", arg_size);
         segfault(vm);
@@ -146,6 +152,9 @@ void exec_instr(VM *vm, Instruction *instr)
     switch (instr->o)
     {
     case mov:
+        exec_mov(vm, instr->o, a1, a2);
+        break;
+    case 0x09 ... 0x0f:
         exec_mov(vm, instr->o, a1, a2);
         break;
     case nop:
@@ -159,29 +168,54 @@ void exec_instr(VM *vm, Instruction *instr)
     }
 }
 
-void exec_mov(VM *vm, Opcode opcode, Args arg1, Args arg2)
+void execute_instr_jb(VM *vm, Program *prog)
 {
-    vm->c.r.ax = (Reg)arg1;
-    return;
-}
+    Args arg1 = 0;
+    Args arg2 = 0;
+    u16 arg_size = map((Opcode)*prog) - 1;
 
-void vm_error(VM *vm, ErrorCode e)
-{
-    u8 exit_code = -1;
-    switch (e)
+    switch (arg_size)
     {
-    case ErrSegv:
-        fprintf(stderr, "%s\n", "VM Segmentation fault");
+    case 0:
+        //       a1 = *(prog + 1);
         break;
-    case SysHlt:
-        fprintf(stderr, "%s\n", "VM System halted ");
-        printf("ax register: %.04hx\n", vm->c.r.ax);
-        exit_code = 0;
+
+    case 2:
+        arg1 = *(u16 *)(prog + 1);
+        // a1 = *(prog + 1);
+        printf("in case argsize==2, arg1:%.04hx\n", arg1);
         break;
+
+    case 4:
+        // a1 = *(prog + 1);
+        // a2 = *(prog + 3);
+        arg1 = *(u16 *)(prog + 1);
+        arg2 = *(u16 *)(prog + 3);
+        printf("in case argsize==5, arg1:%d, arg2:%d,\n", arg1, arg2);
+        break;
+        break;
+
     default:
+        printf("could not find instruction of size %d, returning segfault\n", arg_size);
+        segfault(vm);
         break;
     }
-    if (vm)
-        free(vm);
-    exit((int)exit_code);
+
+    switch (*prog)
+    {
+    case mov:
+        exec_mov(vm, (Opcode)*prog, arg1, arg2);
+        break;
+    case 0x09 ... 0x0f:
+        exec_mov(vm, (Opcode)*prog, arg1, arg2);
+        break;
+    case nop:
+        break;
+    case hlt:
+        vm_error(vm, SysHlt);
+        break;
+    default:
+        // fprintf(stderr, "%s\n", "VM operation not recognized");
+        printf("%s\n", "VM operation not recognized");
+    }
 }

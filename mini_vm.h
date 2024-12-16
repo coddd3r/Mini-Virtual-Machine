@@ -18,6 +18,7 @@
 #define SysHlt 0x01
 #define ErrMem 0x02
 #define ErrSegv 0x04
+#define ErrInstr 0x08
 // #define NoArgs {0x00, 0x00}
 
 typedef unsigned char u8;
@@ -44,16 +45,16 @@ typedef struct s_registers
         Reg ip;
 } Registers;
 
-typedef struct S_CPU
+typedef struct s_cpu
 {
         Registers r;
 } CPU;
 
 typedef enum e_opcode
 {
-    mov = 0x01,
-    nop = 0x02,
-    hlt = 0x03,
+    nop = 0x01,
+    hlt = 0x02,
+    mov = 0x08, /*enum val 8-15(0x08-0x0f) all represent move instructions*/
 } Opcode;
 
 typedef struct s_instrmap
@@ -84,9 +85,16 @@ typedef struct s_virtualmachine
 typedef Memory *Stack;
 
 static IM instruction_map[] = {
-    {mov, 0x03},
     {nop, 0x01},
     {hlt, 0x01},
+    {mov, 0x03},
+    {0x09, 0x03},
+    {0x0a, 0x03},
+    {0x0b, 0x03},
+    {0x0c, 0x03},
+    {0x0d, 0x03},
+    {0x0e, 0x03},
+    {0x0f, 0x03},
 };
 
 #define IM_SIZE ((sizeof(instruction_map) / sizeof(IM)))
@@ -95,6 +103,9 @@ void exec_mov(VM *, Opcode, Args, Args);
 void vm_error(VM *, ErrorCode);
 #define segfault(x) vm_error((x), ErrSegv)
 void exec_instr(VM *vm, Instruction *instr);
+//
+void execute_instr_jb(VM *, Program *);
+//
 void execute(VM *);
 VM *virtualmachine();
 Program *example_program(VM *); // TEST FUNCTION

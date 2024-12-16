@@ -32,11 +32,12 @@ void execute(VM *vm)
         // copy((u8 *)(((u8 *)(&instr)) + (int)sizeof(instr.o)), (u8 *)(prog + 1), (size - 1)); WORKS -SORT OF
         int offset_size = (int)(sizeof(instr.o));
         u8 *arg1_mem = ((u8 *)(&instr)) + offset_size; // position of the arg1 in Instruction memory, after skipping the size used for opcode
-        zero_out((u8 *)(arg1_mem), 1);                 // avoid spill over from previous arguments
-        copy(arg1_mem, (u8 *)(prog + 1), (size - 1));  // WORKS -SORT OF
+        zero_out((u8 *)(arg1_mem), 2);                 // avoid spill over from previous arguments
+        copy(arg1_mem, (u8 *)(prog + 2), (size - 1));  // WORKS -SORT OF
         printf("arguments in instr after copy: %.04hx\n", instr.a[0]);
         // move to the next instruction
-        exec_instr(vm, &instr);
+        // exec_instr(vm, &instr);
+        execute_instr_jb(vm, prog);
         vm->c.r.ip += size;
         prog += size;
     }
