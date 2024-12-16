@@ -27,7 +27,7 @@ void exec_mov(VM *vm, Opcode opcode, Args arg1, Args arg2)
         /*mov ax; bin:1000*/
     case 0x08:
         set_reg(vm, 1, dst, dst_higher, dst_lower);
-
+        break;
     /*mov bx; bin:1001*/
     case 0x09:
         set_reg(vm, 2, dst, dst_higher, dst_lower);
