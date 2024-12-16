@@ -1,3 +1,5 @@
+// 16DEC min 2:05
+
 #ifndef MINIVM_H
 #define MINIVM_H
 // #define _GNU_SOURCE
@@ -21,6 +23,12 @@
 #define ErrInstr 0x08
 // #define NoArgs {0x00, 0x00}
 
+// flag setting macros
+#define equal(x) (!!(((x->c.r.flags) & 0x08) >> 3))
+#define gt(x) (!!(((x->c.r.flags) & 0x04) >> 2))
+#define higher(x) (!!(((x->c.r.flags) & 0x02) >> 1))
+#define lower(x) (!!(((x->c.r.flags) & 0x01)))
+
 typedef unsigned char u8;
 typedef unsigned short int u16;
 typedef unsigned int u32;
@@ -28,7 +36,9 @@ typedef unsigned long int u64;
 
 /*
     16 bit  computer
-    6register addr : AX BX CX DX SP(stack pointer) IP(Instruction Pointer)
+    6 register addr : AX BX CX DX SP(stack pointer) IP(Instruction Pointer)
+    extra register FLAGS: each bit representing a bool
+    $bool repd: eq, gt, Lower Half, Higher Half
     65kb memory
 */
 
@@ -43,6 +53,7 @@ typedef struct s_registers
         Reg dx;
         Reg sp;
         Reg ip;
+        Reg flags;
 } Registers;
 
 typedef struct s_cpu
@@ -103,9 +114,7 @@ void exec_mov(VM *, Opcode, Args, Args);
 void vm_error(VM *, ErrorCode);
 #define segfault(x) vm_error((x), ErrSegv)
 void exec_instr(VM *vm, Instruction *instr);
-//
 void execute_instr_jb(VM *, Program *);
-//
 void execute(VM *);
 VM *virtualmachine();
 Program *example_program(VM *); // TEST FUNCTION

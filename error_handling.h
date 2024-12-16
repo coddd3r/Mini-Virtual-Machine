@@ -19,6 +19,11 @@ void vm_error(VM *vm, ErrorCode e)
         fprintf(stderr, "%s\n", "VM System halted ");
         printf("cx register: %.04hx\n", vm->c.r.cx);
         exit_code = 0;
+        vm->c.r.flags = 0x04;
+        if equal (vm)
+            printf("eflag set\n");
+        if gt (vm)
+            printf("gt flag set\n");
         break;
 
     default:

@@ -20,6 +20,19 @@ int main()
     print_hex((u8 *)new_program, (map(mov) + map(nop) + map(hlt)), ' ');
 }
 
+// generate a vm shell
+VM *virtualmachine()
+{
+    VM *new_vm;
+    size_t size;
+    size = (size_t)sizeof(VM);
+    new_vm = (VM *)calloc(1, size);
+
+    if (!new_vm)
+        errno = ErrMem;
+    return new_vm;
+}
+
 // map opcode in the instruction map and return the size of the instruction map
 u16 map(Opcode o)
 {
@@ -27,13 +40,11 @@ u16 map(Opcode o)
     IM *im;
     u16 ret = 0;
     for (n = IM_SIZE, im = instruction_map; n > 0; n--, im++)
-    {
         if (im->o == o)
         {
             ret = im->size;
             break;
         }
-    }
     // 0 if it fails
     return ret;
 }
@@ -97,24 +108,6 @@ Program *example_program(VM *vm)
 
     // return (Program *)&(vm->m); // pointer to the beginning of memory where we
     return (Program *)(vm->m); // pointer to the beginning of memory where we
-}
-
-// generate a vm shell
-VM *virtualmachine()
-{
-    VM *new_vm;
-    // u16 size;
-    size_t size;
-    // size = (u16)sizeof(VM);
-    size = (size_t)sizeof(VM);
-    // new_vm = (VM *)calloc(1, (int)size);
-    new_vm = (VM *)calloc(1, size);
-
-    if (!new_vm)
-    {
-        errno = ErrMem;
-    }
-    return new_vm;
 }
 
 void exec_instr(VM *vm, Instruction *instr)
