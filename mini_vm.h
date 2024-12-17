@@ -65,7 +65,11 @@ typedef enum e_opcode
 {
     nop = 0x01,
     hlt = 0x02,
-    mov = 0x08, /*enum val 8-15(0x08-0x0f) all represent move instructions to different registers*/
+    movax = 0x08, /*enum val 8-15(0x08-0x0f) all represent move instructions to different registers*/
+    movbx = 0x09,
+    movcx = 0x0a,
+    movdx = 0x0b,
+    movsp = 0x0c,
     ste = 0x10,
     cle = 0x11,
     stg = 0x12,
@@ -111,14 +115,15 @@ typedef Memory *Stack;
 static IM instruction_map[] = {
     {nop, 0x01},
     {hlt, 0x01},
-    {mov, 0x03},
-    {0x09, 0x03},
-    {0x0a, 0x03},
-    {0x0b, 0x03},
-    {0x0c, 0x03},
-    {0x0d, 0x03},
-    {0x0e, 0x03},
-    {0x0f, 0x03},
+    {movax, 0x03}, // mov ax
+    {movbx, 0x03}, // mov bx
+    {movcx, 0x03}, // mov cx
+    {movdx, 0x03}, // mov dx
+    {movsp, 0x03}, // movsp
+    /*{, 0x03}, // reserved
+    {, 0x03}, // reserved
+    {, 0x03},*/
+    // reserved
     {ste, 0x01},
     {cle, 0x01},
     {stg, 0x01},

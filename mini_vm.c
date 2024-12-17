@@ -6,7 +6,6 @@
 #include "execute_mov.h"
 #include "helpers.h"
 
-// int main(int argc, char *argv[])
 int main()
 {
     VM *vm = virtualmachine();
@@ -17,7 +16,7 @@ int main()
     printf("ax = %.04hx\n", vm->c.r.ax);
     execute(vm);
 
-    print_hex((u8 *)new_program, (map(mov) + map(nop) + map(hlt)), ' ');
+    print_hex((u8 *)new_program, (map(movax) + map(nop) + map(hlt)), ' ');
 }
 
 // generate a vm shell
@@ -50,16 +49,12 @@ Program *example_program(VM *vm)
 {
     printf("in example program size of vm:%d\n", (int)sizeof(*vm));
     Args arg1 = 0;
-    u16 instr_size1 = map(mov);
+    u16 instr_size1 = map(movax);
     u16 instr_size2 = map(nop);
 
     assert(instr_size1 && instr_size2);
     printf("instruction sizes:%d, %d\n", instr_size1, instr_size2);
-    // Make corrections, alloc only 1 byte each? all instructions are 1 byte size
-    // and some e.g mov are only 3 byte size after args are added
-    // Instruction *instr1 = (Instruction *)calloc(1, (int)instr_size1);
-    // Instruction *instr2 = (Instruction *)calloc(1, (int)instr_size2);
-    // Instruction *instr3 = (Instruction *)calloc(1, (int)instr_size2);
+    Instruction *instr0 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr1 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr2 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr3 = (Instruction *)calloc(1, (int)sizeof(Instruction));
@@ -67,59 +62,63 @@ Program *example_program(VM *vm)
     Instruction *instr5 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr6 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr_halt = (Instruction *)calloc(1, (int)sizeof(Instruction));
-    assert(instr1 && instr2 && instr3 && instr4 && instr5 && instr6 && instr_halt);
+    assert(instr0 && instr1 && instr2 && instr3 && instr4 && instr5 && instr6 && instr_halt);
     printf("instr1 size is:%d\n", (int)sizeof(*instr1));
-    instr1->o = 0x0a; // mov to cx
+
+    Program *prog = vm->m;
+
+    instr0->o = sth;
+    // instr0->o = nop;
+    copy((u8 *)prog, (u8 *)instr0, 1);
+    prog++;
+
+    instr1->o = movcx; // mov to ax
     printf("in example program setting first instr opcode:%d\n", instr1->o);
     u16 arg_size = (instr_size1 - 1); // instructions is 1 byte
-
     // arguments
     // 0000 1010 mov cx
     // 0000 0000
     // 0000 abcd mov cx, 0xabcd
-    arg1 = 0xabcd; // change Arg type size to u16
-
+    arg1 = 0x03; // change Arg type size to u16
     // set the program pointer to the beginning of the stack memory
-    Program *prog = vm->m;
     copy((u8 *)prog, (u8 *)instr1, 1);
     prog++; // move pointer forward by 1
-
-    // copy((u8 *)prog, (u8 *)&arg1, 1); //causes error since arg is 16bit
     copy((u8 *)prog, (u8 *)&arg1, arg_size);
     prog += arg_size; // move pointer to the nex point in the stack
 
     instr2->o = nop;
     copy((u8 *)prog, (u8 *)instr2, 1);
-
     prog++;
+
     instr3->o = stg;
     copy((u8 *)prog, (u8 *)instr3, 1);
-
     prog++;
+
     instr5->o = cle;
     copy((u8 *)prog, (u8 *)instr5, 1);
-
     prog++;
+
     instr4->o = ste;
     copy((u8 *)prog, (u8 *)instr4, 1);
-
     prog++;
+
     instr6->o = clg;
     copy((u8 *)prog, (u8 *)instr6, 1);
+    prog++; // move pointer by 1 for nop instr
 
     // HALT!!!
-    prog++; // move pointer by 1 for nop instr
     instr_halt->o = hlt;
     copy((u8 *)prog, (u8 *)instr_halt, 1);
+    prog++;
 
     // assign to the instruction pointer register, the first instruction i.e beginning of the stact mem
     vm->c.r.ip = *(Reg *)(vm->m);
     // point stack pointer to the end of the memory since stack builds upward from end
     vm->c.r.sp = (Reg)-1;
-
     // set break point at the end of instructions to separate instruction mem from stack
     vm->b = (instr_size1 + instr_size2 * 6 + arg_size);
 
+    free(instr0);
     free(instr1);
     free(instr2);
     free(instr3);
@@ -135,9 +134,8 @@ void exec_instr(VM *vm, Instruction *instr)
 {
     Args a1 = 0;
     Args a2 = 0;
-    u16 instr_size = map(instr->o);
-    u16 arg_size = instr_size - 1;
-    // u16 size = map(instr->o) - 1;
+    // all instr codes occupy 1 byte, rest of spce is for args if necessary
+    u16 arg_size = map(instr->o) - 1;
     printf("in execinstr, opcode:%d, arguments:%.04hx\n", instr->o, instr->a[0]);
     printf("executing args of size:%d\n", arg_size);
     switch (arg_size)
@@ -165,10 +163,7 @@ void exec_instr(VM *vm, Instruction *instr)
 
     switch (instr->o)
     {
-    case mov:
-        exec_mov(vm, instr->o, a1, a2);
-        break;
-    case 0x09 ... 0x0f:
+    case movax ... movsp:
         exec_mov(vm, instr->o, a1, a2);
         break;
     case nop:
@@ -241,10 +236,7 @@ void execute_instr_jb(VM *vm, Program *prog)
 
     switch (*prog)
     {
-    case mov:
-        exec_mov(vm, (Opcode)*prog, arg1, arg2);
-        break;
-    case 0x09 ... 0x0f:
+    case movax ... movsp:
         exec_mov(vm, (Opcode)*prog, arg1, arg2);
         break;
     case nop:

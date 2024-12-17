@@ -23,6 +23,8 @@ void execute(VM *vm)
         printf("in while loop opcode:%d\n", instr.o);
         size = map(instr.o);
 
+        if (instr.o == movax)
+            printf("in MOVAX instr\n");
         if (instr.o == hlt)
         {
             printf("found HALT\n");
