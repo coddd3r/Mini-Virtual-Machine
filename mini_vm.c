@@ -14,8 +14,8 @@ int main()
     Program *new_program = example_program(vm);
     printf("program address = %p\n", new_program);
 
-    execute(vm);
     printf("ax = %.04hx\n", vm->c.r.ax);
+    execute(vm);
 
     print_hex((u8 *)new_program, (map(mov) + map(nop) + map(hlt)), ' ');
 }
@@ -23,11 +23,8 @@ int main()
 // generate a vm shell
 VM *virtualmachine()
 {
-    VM *new_vm;
-    size_t size;
-    size = (size_t)sizeof(VM);
-    new_vm = (VM *)calloc(1, size);
-
+    size_t size = (size_t)sizeof(VM);
+    VM *new_vm = (VM *)calloc(1, size);
     if (!new_vm)
         errno = ErrMem;
     return new_vm;
@@ -66,7 +63,9 @@ Program *example_program(VM *vm)
     Instruction *instr1 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr2 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr3 = (Instruction *)calloc(1, (int)sizeof(Instruction));
-    assert(instr1 && instr2 && instr3);
+    Instruction *instr4 = (Instruction *)calloc(1, (int)sizeof(Instruction));
+    Instruction *instr5 = (Instruction *)calloc(1, (int)sizeof(Instruction));
+    assert(instr1 && instr2 && instr3 && instr4);
     printf("instr1 size is:%d\n", (int)sizeof(*instr1));
     instr1->o = 0x0a; // mov to cx
     printf("in example program setting first instr opcode:%d\n", instr1->o);
@@ -90,9 +89,17 @@ Program *example_program(VM *vm)
     instr2->o = nop;
     copy((u8 *)prog, (u8 *)instr2, 1);
 
+    prog++;
+    instr4->o = ste;
+    copy((u8 *)prog, (u8 *)instr4, 1);
+
     prog++; // move pointer by 1 for nop instr
     instr3->o = hlt;
     copy((u8 *)prog, (u8 *)instr3, 1);
+
+    // prog++;
+    // instr5->o = cle;
+    // copy((u8 *)prog, (u8 *)instr5, 1);
 
     // assign to the instruction pointer register, the first instruction i.e beginning of the stact mem
     vm->c.r.ip = *(Reg *)(vm->m);
@@ -105,6 +112,8 @@ Program *example_program(VM *vm)
     free(instr1);
     free(instr2);
     free(instr3);
+    free(instr4);
+    free(instr5);
 
     // return (Program *)&(vm->m); // pointer to the beginning of memory where we
     return (Program *)(vm->m); // pointer to the beginning of memory where we
@@ -154,6 +163,30 @@ void exec_instr(VM *vm, Instruction *instr)
         break;
     case hlt:
         vm_error(vm, SysHlt);
+        break;
+    case ste:
+        vm->c.r.flags |= 0x08;
+        break;
+    case stg:
+        vm->c.r.flags |= 0x04;
+        break;
+    case sth:
+        vm->c.r.flags |= 0x02;
+        break;
+    case stl:
+        vm->c.r.flags |= 0x01;
+        break;
+    case cle:
+        vm->c.r.flags &= 0x07;
+        break;
+    case clg:
+        vm->c.r.flags &= 0x0b;
+        break;
+    case clh:
+        vm->c.r.flags &= 0x0d;
+        break;
+    case cll:
+        vm->c.r.flags &= 0x0e;
         break;
     default:
         // fprintf(stderr, "%s\n", "VM operation not recognized");
@@ -206,6 +239,30 @@ void execute_instr_jb(VM *vm, Program *prog)
         break;
     case hlt:
         vm_error(vm, SysHlt);
+        break;
+    case ste:
+        vm->c.r.flags |= 0x08;
+        break;
+    case stg:
+        vm->c.r.flags |= 0x04;
+        break;
+    case sth:
+        vm->c.r.flags |= 0x02;
+        break;
+    case stl:
+        vm->c.r.flags |= 0x01;
+        break;
+    case cle:
+        vm->c.r.flags &= 0x07;
+        break;
+    case clg:
+        vm->c.r.flags &= 0x0b;
+        break;
+    case clh:
+        vm->c.r.flags &= 0x0d;
+        break;
+    case cll:
+        vm->c.r.flags &= 0x0e;
         break;
     default:
         // fprintf(stderr, "%s\n", "VM operation not recognized");

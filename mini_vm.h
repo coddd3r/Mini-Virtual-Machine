@@ -65,7 +65,20 @@ typedef enum e_opcode
 {
     nop = 0x01,
     hlt = 0x02,
-    mov = 0x08, /*enum val 8-15(0x08-0x0f) all represent move instructions*/
+    mov = 0x08, /*enum val 8-15(0x08-0x0f) all represent move instructions to different registers*/
+    ste = 0x10,
+    cle = 0x11,
+    stg = 0x12,
+    clg = 0x13,
+    sth = 0x14,
+    clh = 0x15,
+    stl = 0x16,
+    cll = 0x17,
+    /*
+    reserved = 0x18,
+    reserved = 0x19
+    */
+
 } Opcode;
 
 typedef struct s_instrmap
@@ -106,6 +119,14 @@ static IM instruction_map[] = {
     {0x0d, 0x03},
     {0x0e, 0x03},
     {0x0f, 0x03},
+    {ste, 0x01},
+    {cle, 0x01},
+    {stg, 0x01},
+    {clg, 0x01},
+    {stl, 0x01},
+    {cll, 0x01},
+    {sth, 0x01},
+    {clh, 0x01},
 };
 
 #define IM_SIZE ((sizeof(instruction_map) / sizeof(IM)))

@@ -22,7 +22,7 @@ DEPFILES=$(patsubst %.c, %.d, $(CFILES))
 all: $(BINARY)
 
 $(BINARY): $(OBJECTS)
-		$(CC) -o $@ $^ -larcfour
+		$(CC) -o $@ $^ 
 
 %.o:%.c
 		$(CC) $(CFLAGS) -c -o $@ $<

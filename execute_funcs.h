@@ -8,7 +8,7 @@ void execute(VM *vm)
     assert(vm && *vm->m);
     Program *prog;
     Instruction instr;
-    u16 instr_size1 = map(mov);
+    // u16 instr_size1 = map(mov);
     u16 size = 0;
     // prog = (Program *)&vm->m;
     prog = (Program *)vm->m;
@@ -22,19 +22,23 @@ void execute(VM *vm)
         instr.o = (Opcode)*prog;
         printf("in while loop opcode:%d\n", instr.o);
         size = map(instr.o);
+
         if (instr.o == hlt)
+        {
             printf("found HALT\n");
+            printf("AFTER executing value of flags:%d\n", vm->c.r.flags);
+        }
         printf("in while loop instruction size:%d\n", size);
         printf("in while loop instruction opcode:%d\n", instr.o);
 
         // copy arguments into the instruction pointer
         printf("arguments in prog before copy: %.04hx\n", *(prog + 1));
-        // copy((u8 *)(((u8 *)(&instr)) + (int)sizeof(instr.o)), (u8 *)(prog + 1), (size - 1)); WORKS -SORT OF
         int offset_size = (int)(sizeof(instr.o));
         u8 *arg1_mem = ((u8 *)(&instr)) + offset_size; // position of the arg1 in Instruction memory, after skipping the size used for opcode
         zero_out((u8 *)(arg1_mem), 2);                 // avoid spill over from previous arguments
         copy(arg1_mem, (u8 *)(prog + 2), (size - 1));  // WORKS -SORT OF
         printf("arguments in instr after copy: %.04hx\n", instr.a[0]);
+
         // move to the next instruction
         // exec_instr(vm, &instr);
         execute_instr_jb(vm, prog);
@@ -42,7 +46,6 @@ void execute(VM *vm)
         prog += size;
     }
 
-    // free(instr);
     return;
 }
 
