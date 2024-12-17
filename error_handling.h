@@ -17,7 +17,7 @@ void vm_error(VM *vm, ErrorCode e)
 
     case SysHlt:
         fprintf(stderr, "%s\n", "VM System halted ");
-        printf("cx register: %.04hx\n", vm->c.r.cx);
+        printf("ax register: %.04hx\n", vm->c.r.ax);
         exit_code = 0;
         if equal (vm)
             printf("eflag set\n");

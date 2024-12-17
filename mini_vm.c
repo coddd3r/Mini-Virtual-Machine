@@ -65,7 +65,9 @@ Program *example_program(VM *vm)
     Instruction *instr3 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr4 = (Instruction *)calloc(1, (int)sizeof(Instruction));
     Instruction *instr5 = (Instruction *)calloc(1, (int)sizeof(Instruction));
-    assert(instr1 && instr2 && instr3 && instr4);
+    Instruction *instr6 = (Instruction *)calloc(1, (int)sizeof(Instruction));
+    Instruction *instr_halt = (Instruction *)calloc(1, (int)sizeof(Instruction));
+    assert(instr1 && instr2 && instr3 && instr4 && instr5 && instr6 && instr_halt);
     printf("instr1 size is:%d\n", (int)sizeof(*instr1));
     instr1->o = 0x0a; // mov to cx
     printf("in example program setting first instr opcode:%d\n", instr1->o);
@@ -90,16 +92,25 @@ Program *example_program(VM *vm)
     copy((u8 *)prog, (u8 *)instr2, 1);
 
     prog++;
+    instr3->o = stg;
+    copy((u8 *)prog, (u8 *)instr3, 1);
+
+    prog++;
+    instr5->o = cle;
+    copy((u8 *)prog, (u8 *)instr5, 1);
+
+    prog++;
     instr4->o = ste;
     copy((u8 *)prog, (u8 *)instr4, 1);
 
-    prog++; // move pointer by 1 for nop instr
-    instr3->o = hlt;
-    copy((u8 *)prog, (u8 *)instr3, 1);
+    prog++;
+    instr6->o = clg;
+    copy((u8 *)prog, (u8 *)instr6, 1);
 
-    // prog++;
-    // instr5->o = cle;
-    // copy((u8 *)prog, (u8 *)instr5, 1);
+    // HALT!!!
+    prog++; // move pointer by 1 for nop instr
+    instr_halt->o = hlt;
+    copy((u8 *)prog, (u8 *)instr_halt, 1);
 
     // assign to the instruction pointer register, the first instruction i.e beginning of the stact mem
     vm->c.r.ip = *(Reg *)(vm->m);
@@ -107,13 +118,15 @@ Program *example_program(VM *vm)
     vm->c.r.sp = (Reg)-1;
 
     // set break point at the end of instructions to separate instruction mem from stack
-    vm->b = (instr_size1 + instr_size2 * 2 + arg_size);
+    vm->b = (instr_size1 + instr_size2 * 6 + arg_size);
 
     free(instr1);
     free(instr2);
     free(instr3);
     free(instr4);
     free(instr5);
+    free(instr6);
+    free(instr_halt);
 
     // return (Program *)&(vm->m); // pointer to the beginning of memory where we
     return (Program *)(vm->m); // pointer to the beginning of memory where we
