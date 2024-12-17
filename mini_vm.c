@@ -128,7 +128,6 @@ Program *example_program(VM *vm)
     free(instr6);
     free(instr_halt);
 
-    // return (Program *)&(vm->m); // pointer to the beginning of memory where we
     return (Program *)(vm->m); // pointer to the beginning of memory where we
 }
 
