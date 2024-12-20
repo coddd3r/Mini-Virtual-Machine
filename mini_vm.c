@@ -68,11 +68,10 @@ Program *example_program(VM *vm)
     Program *prog = vm->m;
 
     instr0->o = sth;
-    // instr0->o = nop;
     copy((u8 *)prog, (u8 *)instr0, 1);
     prog++;
 
-    instr1->o = movcx; // mov to ax
+    instr1->o = movcx;
     printf("in example program setting first instr opcode:%d\n", instr1->o);
     u16 arg_size = (instr_size1 - 1); // instructions is 1 byte
     // arguments
@@ -82,9 +81,9 @@ Program *example_program(VM *vm)
     arg1 = 0x03; // change Arg type size to u16
     // set the program pointer to the beginning of the stack memory
     copy((u8 *)prog, (u8 *)instr1, 1);
-    prog++; // move pointer forward by 1
+    prog++; // move pointer forward by 1, i.e opsize is 1byte
     copy((u8 *)prog, (u8 *)&arg1, arg_size);
-    prog += arg_size; // move pointer to the nex point in the stack
+    prog += arg_size; // move pointer to the nex point in the stack, depending on arg size
 
     instr2->o = nop;
     copy((u8 *)prog, (u8 *)instr2, 1);
